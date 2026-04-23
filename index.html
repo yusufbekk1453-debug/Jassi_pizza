@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>RestoPro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0f0f0f;--sur:#181818;--card:#212121;--bdr:#2c2c2c;
+  --gold:#c9a84c;--gl:#e8c97a;--gdim:rgba(201,168,76,0.13);
+  --red:#e05252;--green:#52c07a;--blue:#5294e0;--orange:#e09052;
+  --txt:#f0ede8;--mut:#7a7570;--r:14px;
+}
+html,body{height:100%;overflow:hidden;touch-action:manipulation}
+body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;font-size:15px}
+
+/* ── LOGIN ── */
+#login-screen{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;z-index:1000;
+}
+.login-logo{font-family:'Playfair Display',serif;font-size:36px;color:var(--gold);margin-bottom:4px;text-align:center}
+.login-sub{font-size:13px;color:var(--mut);margin-bottom:32px;text-align:center}
+.login-box{width:100%;max-width:360px;background:var(--card);border:1px solid var(--bdr);border-radius:20px;padding:24px}
+.login-title{font-size:16px;font-weight:600;margin-bottom:20px;text-align:center}
+.err{background:rgba(224,82,82,0.12);border:1px solid rgba(224,82,82,0.3);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:14px;display:none}
+
+/* ── APP ── */
+.app{height:100vh;display:flex;flex-direction:column}
+.topbar{
+  background:var(--sur);border-bottom:1px solid var(--bdr);
+  padding:12px 16px;display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.topbar-logo{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.role-badge{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600}
+.rb-admin{background:rgba(201,168,76,0.15);color:var(--gold)}
+.rb-waiter{background:rgba(82,192,122,0.15);color:var(--green)}
+.logout-btn{font-size:12px;color:var(--mut);cursor:pointer;padding:4px 8px;border-radius:6px;border:1px solid var(--bdr);background:none;color:var(--mut)}
+
+.pages{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px 14px 80px;-webkit-overflow-scrolling:touch}
+.pages::-webkit-scrollbar{display:none}
+.page{display:none}
+.page.active{display:block}
+
+/* ── BOTTOM NAV ── */
+.bnav{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--sur);border-top:1px solid var(--bdr);
+  display:flex;z-index:50;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.ntab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:8px 2px 6px;color:var(--mut);font-size:10px;font-weight:500;
+  border:none;background:none;-webkit-appearance:none;cursor:pointer;transition:color 0.2s;
+}
+.ntab .ico{font-size:20px;margin-bottom:2px}
+.ntab.active{color:var(--gold)}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.ctitle{font-family:'Playfair Display',serif;font-size:15px;color:var(--gold);margin-bottom:14px}
+
+/* ── FORM ── */
+.fg{margin-bottom:12px}
+label{display:block;font-size:11px;color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+input,select{
+  width:100%;padding:13px 14px;
+  background:var(--bg);border:1.5px solid var(--bdr);
+  border-radius:10px;color:var(--txt);
+  font-family:'DM Sans',sans-serif;font-size:16px;
+  outline:none;-webkit-appearance:none;appearance:none;transition:border .2s;
+}
+input:focus,select:focus{border-color:var(--gold)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7570' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+select option{background:#1a1a1a}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ── BUTTONS ── */
+.btn{display:flex;align-items:center;justify-content:center;padding:13px;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;-webkit-appearance:none;width:100%;transition:opacity .15s,transform .1s}
+.btn:active{opacity:.8;transform:scale(.98)}
+.btn-gold{background:var(--gold);color:#0f0f0f}
+.btn-outline{background:transparent;border:1.5px solid var(--bdr);color:var(--txt)}
+.btn-red{background:var(--red);color:#fff}
+.btn-green{background:var(--green);color:#0f0f0f}
+.btn-sm{padding:7px 12px;font-size:13px;width:auto;border-radius:8px}
+.brow{display:flex;gap:8px;margin-top:10px}
+.brow .btn{flex:1}
+
+/* ── MENU GRID ── */
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mbtn{background:var(--bg);border:1.5px solid var(--bdr);border-radius:10px;padding:10px 4px;cursor:pointer;text-align:center;-webkit-appearance:none;transition:all .12s}
+.mbtn:active{border-color:var(--gold);background:var(--gdim);transform:scale(.95)}
+.mbtn .em{font-size:22px}
+.mbtn .mn{font-size:11px;font-weight:500;color:var(--txt);margin-top:4px;line-height:1.2}
+.mbtn .mp{font-family:'DM Mono';font-size:10px;color:var(--gold);margin-top:2px}
+
+/* ── ORDER ITEMS ── */
+.oitem{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--bdr);gap:6px}
+.oitem:last-child{border-bottom:none}
+.oname{flex:1;font-size:14px}
+.qc{display:flex;align-items:center;gap:6px}
+.qb{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--bg);color:var(--txt);cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;-webkit-appearance:none}
+.qb:active{border-color:var(--gold);color:var(--gold)}
+.qn{font-family:'DM Mono';font-size:15px;width:22px;text-align:center}
+.oprice{font-family:'DM Mono';font-size:13px;color:var(--gl);min-width:68px;text-align:right}
+
+/* ── TOTAL ── */
+.tbox{background:var(--gdim);border:1px solid rgba(201,168,76,.25);border-radius:12px;padding:14px;margin-top:12px}
+.tr{display:flex;justify-content:space-between;margin-bottom:6px}
+.tr:last-child{margin-bottom:0}
+.tl{font-size:13px;color:var(--mut)}
+.tv{font-family:'DM Mono';font-size:13px}
+.tgr{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid rgba(201,168,76,.3);margin-top:8px}
+.tgl{font-size:15px;font-weight:600}
+.tgv{font-family:'DM Mono';font-size:20px;color:var(--gl);font-weight:700}
+
+/* ── ORDER CARDS ── */
+.ocard{background:var(--bg);border:1.5px solid var(--bdr);border-radius:12px;padding:14px;margin-bottom:10px;transition:border .2s}
+.ocard.paid{border-color:rgba(82,192,122,.4)}
+.ocard.unpaid{border-color:rgba(224,82,82,.25)}
+.ocard-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.ocard-info .otitle{font-size:15px;font-weight:600}
+.ocard-info .osub{font-size:12px;color:var(--mut);margin-top:2px}
+.ostatus{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.st-paid{background:rgba(82,192,122,.15);color:var(--green)}
+.st-unpaid{background:rgba(224,82,82,.15);color:var(--red)}
+.ocard-items{font-size:13px;color:var(--mut);margin-bottom:10px;line-height:1.6}
+.ocard-foot{display:flex;justify-content:space-between;align-items:center}
+.ototal{font-family:'DM Mono';font-size:16px;color:var(--gl);font-weight:600}
+
+/* ── LIST ITEMS ── */
+.li{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bdr)}
+.li:last-child{border-bottom:none}
+.lin .ln{font-size:14px;font-weight:500}
+.lin .ls{font-size:12px;color:var(--mut);margin-top:2px}
+.lir{display:flex;align-items:center;gap:8px}
+.la{font-family:'DM Mono';font-size:14px}
+.agold{color:var(--gold)}.agreen{color:var(--green)}.ared{color:var(--red)}
+
+/* ── PAGE HEADER ── */
+.ph{margin-bottom:16px;padding-top:4px}
+.pt{font-family:'Playfair Display',serif;font-size:24px;font-weight:700}
+.ps{font-size:12px;color:var(--mut);margin-top:2px}
+
+/* ── STATS ── */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.sc{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:14px}
+.sl{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut)}
+.sv{font-family:'DM Mono';font-size:18px;font-weight:600;margin-top:6px}
+.sg .sv{color:var(--gl)}.sr .sv{color:var(--red)}.sgr .sv{color:var(--green)}.sb .sv{color:var(--blue)}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tab{padding:8px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid var(--bdr);background:none;color:var(--mut);-webkit-appearance:none;transition:all .15s}
+.tab.active{background:var(--gdim);border-color:var(--gold);color:var(--gold)}
+
+.empty{text-align:center;padding:24px;color:var(--mut);font-size:13px}
+hr.div{border:none;border-top:1px solid var(--bdr);margin:12px 0}
+
+/* ── MODAL ── */
+.mover{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:flex-end}
+.mover.open{display:flex}
+.modal{background:var(--card);border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));width:100%;max-height:92vh;overflow-y:auto}
+.mhandle{width:40px;height:4px;background:var(--bdr);border-radius:2px;margin:0 auto 14px}
+.mtitle{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);margin-bottom:14px}
+
+/* ── HIDDEN ── */
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- ════ LOGIN ════ -->
+<div id="login-screen">
+  <div class="login-logo">🍽 RestoPro</div>
+  <div class="login-sub">Restoran boshqaruv tizimi</div>
+  <div class="login-box">
+    <div class="login-title">Kirish</div>
+    <div class="err" id="lerr">Parol yoki login noto'g'ri!</div>
+    <div class="fg"><label>Login</label><input type="text" id="l-user" placeholder="login" autocomplete="username"></div>
+    <div class="fg"><label>Parol</label><input type="password" id="l-pass" placeholder="parol" autocomplete="current-password"></div>
+    <button class="btn btn-gold" onclick="doLogin()" style="margin-top:4px">Kirish</button>
+    <div style="margin-top:14px;font-size:12px;color:var(--mut);text-align:center">
+      Admin: <b style="color:var(--txt)">admin / admin123</b><br>
+      Ofitsiant: <b style="color:var(--txt)">waiter / waiter123</b>
+    </div>
+  </div>
+</div>
+
+<!-- ════ APP ════ -->
+<div class="app hidden" id="app">
+
+  <div class="topbar">
+    <div class="topbar-logo">🍽 RestoPro</div>
+    <div class="topbar-right">
+      <span class="role-badge" id="rbadge"></span>
+      <button class="logout-btn" onclick="doLogout()">Chiqish</button>
+    </div>
+  </div>
+
+  <div class="pages" id="pages">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="pg-dash">
+      <div class="ph"><div class="pt">Bosh sahifa</div><div class="ps" id="tday"></div></div>
+      <div class="sgrid">
+        <div class="sc sg"><div class="sl">Bugungi savdo</div><div class="sv" id="s0">0</div></div>
+        <div class="sc sr"><div class="sl">Kutilmoqda</div><div class="sv" id="s1">0</div></div>
+        <div class="sc sgr"><div class="sl">To'langan</div><div class="sv" id="s2">0</div></div>
+        <div class="sc sb"><div class="sl">Zakazlar</div><div class="sv" id="s3">0</div></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">📋 Oxirgi zakazlar</div>
+        <div id="dash-orders"></div>
+      </div>
+    </div>
+
+    <!-- ZAKAZ QABUL -->
+    <div class="page" id="pg-order">
+      <div class="ph"><div class="pt">Zakaz qabul</div><div class="ps">Taom tanlang va zakaz bering</div></div>
+
+      <div class="card">
+        <div class="ctitle">⚙️ Stol</div>
+        <div class="row2">
+          <div class="fg"><label>Stol №</label><input type="number" id="o-table" value="1" min="1" inputmode="numeric"></div>
+          <div class="fg"><label>Mehmon</label><input type="number" id="o-guest" value="1" min="1" inputmode="numeric"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ctitle">📋 Menyu</div>
+        <div class="mgrid" id="menu-btns"></div>
+      </div>
+
+      <div class="card">
+        <div class="ctitle">🛒 Tanlangan taomlar</div>
+        <div id="cur-order"><div class="empty">Menyudan tanlang</div></div>
+        <div class="tbox">
+          <div class="tgr"><span class="tgl">JAMI</span><span class="tgv" id="cur-total">0 so'm</span></div>
+        </div>
+        <div class="brow" style="margin-top:14px">
+          <button class="btn btn-gold" onclick="submitOrder()">✅ Zakaz berish</button>
+          <button class="btn btn-outline" style="flex:0;padding:13px 14px" onclick="clearCurOrder()">🗑</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZAKAZLAR RO'YXATI -->
+    <div class="page" id="pg-orders">
+      <div class="ph"><div class="pt">Zakazlar</div><div class="ps">Barcha zakazlar holati</div></div>
+      <div class="tabs">
+        <button class="tab active" onclick="filterOrders('all',this)">Barchasi</button>
+        <button class="tab" onclick="filterOrders('unpaid',this)">Kutilmoqda</button>
+        <button class="tab" onclick="filterOrders('paid',this)">To'langan</button>
+      </div>
+      <div id="orders-list"></div>
+    </div>
+
+    <!-- MENYU (faqat admin) -->
+    <div class="page" id="pg-menu">
+      <div class="ph"><div class="pt">Menyu</div><div class="ps">Taomlar va narxlar</div></div>
+      <div class="card" id="add-menu-card">
+        <div class="ctitle">➕ Taom qo'shish</div>
+        <div class="fg"><label>Taom nomi</label><input type="text" id="m-name" placeholder="Masalan: Manti"></div>
+        <div class="fg"><label>Kategoriya</label>
+          <select id="m-cat">
+            <option>🥣 Birinchi taomlar</option><option>🍖 Ikkinchi taomlar</option>
+            <option>🥗 Salatlar</option><option>🥤 Ichimliklar</option>
+            <option>🍰 Shirinliklar</option><option>🍞 Non</option>
+          </select>
+        </div>
+        <div class="row2">
+          <div class="fg"><label>Narxi (so'm)</label><input type="number" id="m-price" placeholder="0" inputmode="numeric"></div>
+          <div class="fg"><label>Emoji</label><input type="text" id="m-emoji" placeholder="🍽" maxlength="2"></div>
+        </div>
+        <button class="btn btn-gold" onclick="addMenuItem()">Qo'shish</button>
+      </div>
+      <div class="card">
+        <div class="ctitle">📋 Taomlar ro'yxati</div>
+        <div id="menu-list"></div>
+      </div>
+    </div>
+
+    <!-- SOZLAMALAR (faqat admin) -->
+    <div class="page" id="pg-settings">
+      <div class="ph"><div class="pt">Sozlamalar</div><div class="ps">Foydalanuvchilar va ruxsatlar</div></div>
+      <div class="card">
+        <div class="ctitle">👥 Foydalanuvchilar</div>
+        <div id="users-list"></div>
+      </div>
+      <div class="card">
+        <div class="ctitle">➕ Yangi foydalanuvchi</div>
+        <div class="fg"><label>Login</label><input type="text" id="u-login" placeholder="login123"></div>
+        <div class="fg"><label>Parol</label><input type="text" id="u-pass" placeholder="parol123"></div>
+        <div class="fg"><label>Rol</label>
+          <select id="u-role">
+            <option value="waiter">Ofitsiant</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="fg"><label>Ism</label><input type="text" id="u-name" placeholder="Ismi"></div>
+        <button class="btn btn-gold" onclick="addUser()">Qo'shish</button>
+      </div>
+    </div>
+
+  </div><!-- /pages -->
+
+  <nav class="bnav" id="bnav">
+    <button class="ntab active" onclick="go('dash',this)"><div class="ico">📊</div>Asosiy</button>
+    <button class="ntab" onclick="go('order',this)"><div class="ico">➕</div>Zakaz</button>
+    <button class="ntab" onclick="go('orders',this)"><div class="ico">🧾</div>Zakazlar</button>
+    <button class="ntab admin-tab" onclick="go('menu',this)"><div class="ico">📋</div>Menyu</button>
+    <button class="ntab admin-tab" onclick="go('settings',this)"><div class="ico">⚙️</div>Sozlama</button>
+  </nav>
+</div>
+
+<!-- PAY MODAL -->
+<div class="mover" id="pay-modal">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">💳 To'lovni tasdiqlash</div>
+    <div id="pay-detail"></div>
+    <div class="brow" style="margin-top:16px">
+      <button class="btn btn-green" onclick="confirmPay()">✅ To'landi</button>
+      <button class="btn btn-outline" onclick="closePayModal()">Bekor</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+const DEF = {
+  users:[
+    {login:'admin',pass:'admin123',role:'admin',name:'Admin'},
+    {login:'waiter',pass:'waiter123',role:'waiter',name:'Ofitsiant'},
+  ],
+  menu:[
+    {id:1,name:'Manti',cat:'🍖 Ikkinchi taomlar',price:18000,em:'🥟'},
+    {id:2,name:"Lag'mon",cat:'🍖 Ikkinchi taomlar',price:22000,em:'🍜'},
+    {id:3,name:'Shurpa',cat:'🥣 Birinchi taomlar',price:20000,em:'🍲'},
+    {id:4,name:'Palov',cat:'🍖 Ikkinchi taomlar',price:25000,em:'🍚'},
+    {id:5,name:'Salat',cat:'🥗 Salatlar',price:12000,em:'🥗'},
+    {id:6,name:'Choy',cat:'🥤 Ichimliklar',price:5000,em:'🍵'},
+    {id:7,name:'Kola',cat:'🥤 Ichimliklar',price:8000,em:'🥤'},
+    {id:8,name:'Non',cat:'🍞 Non',price:3000,em:'🫓'},
+  ],
+  orders:[],
+  nid:9,
+  onid:1,
+};
+let D;
+try{const r=localStorage.getItem('rp2');D=r?JSON.parse(r):JSON.parse(JSON.stringify(DEF));}
+catch(e){D=JSON.parse(JSON.stringify(DEF));}
+const sv=()=>{try{localStorage.setItem('rp2',JSON.stringify(D));}catch(e){}};
+
+let curUser=null;
+let curOrderItems=[];
+let payOrderId=null;
+let ordFilter='all';
+
+const f=n=>Number(n||0).toLocaleString('uz-UZ')+" so'm";
+const el=id=>document.getElementById(id);
+const gv=id=>(el(id)||{}).value||'';
+const gn=id=>parseFloat((el(id)||{}).value)||0;
+const now=()=>new Date().toLocaleString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
+const today=()=>new Date().toLocaleDateString('uz-UZ');
+
+// ══════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════
+function doLogin(){
+  const u=gv('l-user').trim(),p=gv('l-pass').trim();
+  const found=D.users.find(x=>x.login===u&&x.pass===p);
+  if(!found){el('lerr').style.display='block';return;}
+  el('lerr').style.display='none';
+  curUser=found;
+  el('login-screen').style.display='none';
+  el('app').classList.remove('hidden');
+  el('rbadge').textContent=found.role==='admin'?'👑 Admin':'🧑‍🍳 Ofitsiant';
+  el('rbadge').className='role-badge '+(found.role==='admin'?'rb-admin':'rb-waiter');
+  // Admin tabs
+  document.querySelectorAll('.admin-tab').forEach(t=>{
+    t.style.display=found.role==='admin'?'':'none';
+  });
+  // Menyu add card
+  if(el('add-menu-card')) el('add-menu-card').style.display=found.role==='admin'?'':'none';
+  go('dash',el('bnav').querySelector('.ntab'));
+}
+
+function doLogout(){
+  curUser=null;curOrderItems=[];
+  el('app').classList.add('hidden');
+  el('login-screen').style.display='flex';
+  el('l-user').value='';el('l-pass').value='';
+}
+
+el('l-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+// ══════════════════════════════════════
+// NAV
+// ══════════════════════════════════════
+const renders={dash:rDash,order:rMenuBtns,orders:()=>rOrders(ordFilter),menu:rMenuList,settings:rSettings};
+function go(p,t){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(x=>x.classList.remove('active'));
+  el('pg-'+p).classList.add('active');
+  if(t)t.classList.add('active');
+  el('pages').scrollTop=0;
+  renders[p]?.();
+}
+
+// ══════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════
+function rDash(){
+  el('tday').textContent=new Date().toLocaleDateString('uz-UZ',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const paid=D.orders.filter(o=>o.status==='paid');
+  const unpaid=D.orders.filter(o=>o.status==='unpaid');
+  const paidTotal=paid.reduce((s,o)=>s+o.total,0);
+  const unpaidTotal=unpaid.reduce((s,o)=>s+o.total,0);
+  el('s0').textContent=f(paidTotal+unpaidTotal);
+  el('s1').textContent=f(unpaidTotal);
+  el('s2').textContent=f(paidTotal);
+  el('s3').textContent=D.orders.length;
+  const box=el('dash-orders');
+  if(!D.orders.length){box.innerHTML='<div class="empty">Zakaz yo\'q</div>';return;}
+  box.innerHTML=D.orders.slice(-6).reverse().map(o=>`
+    <div class="li">
+      <div class="lin">
+        <div class="ln">Stol ${o.table} · ${o.guests} kishi</div>
+        <div class="ls">${o.time} · ${o.items.map(i=>i.name).join(', ')}</div>
+      </div>
+      <div class="lir">
+        <span class="la ${o.status==='paid'?'agreen':'ared'}">${f(o.total)}</span>
+        <span class="ostatus ${o.status==='paid'?'st-paid':'st-unpaid'}">${o.status==='paid'?'✅':'⏳'}</span>
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════
+// ORDER
+// ══════════════════════════════════════
+function rMenuBtns(){
+  el('menu-btns').innerHTML=D.menu.map(m=>`
+    <button class="mbtn" onclick="addToOrder(${m.id})">
+      <div class="em">${m.em}</div>
+      <div class="mn">${m.name}</div>
+      <div class="mp">${(m.price/1000).toFixed(0)}k</div>
+    </button>`).join('');
+}
+
+function addToOrder(id){
+  const m=D.menu.find(x=>x.id===id);if(!m)return;
+  const ex=curOrderItems.find(x=>x.id===id);
+  if(ex)ex.qty++;else curOrderItems.push({id,name:m.name,price:m.price,qty:1});
+  rCurOrder();
+}
+function chQty(id,d){
+  const o=curOrderItems.find(x=>x.id===id);if(!o)return;
+  o.qty+=d;if(o.qty<=0)curOrderItems=curOrderItems.filter(x=>x.id!==id);
+  rCurOrder();
+}
+function rCurOrder(){
+  const box=el('cur-order');
+  if(!curOrderItems.length){box.innerHTML='<div class="empty">Menyudan tanlang</div>';el('cur-total').textContent=f(0);return;}
+  box.innerHTML=curOrderItems.map(o=>`
+    <div class="oitem">
+      <div class="oname">${o.name}</div>
+      <div class="qc">
+        <button class="qb" onclick="chQty(${o.id},-1)">−</button>
+        <span class="qn">${o.qty}</span>
+        <button class="qb" onclick="chQty(${o.id},1)">+</button>
+      </div>
+      <div class="oprice">${f(o.price*o.qty)}</div>
+    </div>`).join('');
+  el('cur-total').textContent=f(curOrderItems.reduce((s,o)=>s+o.price*o.qty,0));
+}
+function clearCurOrder(){curOrderItems=[];rCurOrder();}
+
+function submitOrder(){
+  if(!curOrderItems.length){alert("Hech narsa tanlanmagan!");return;}
+  const total=curOrderItems.reduce((s,o)=>s+o.price*o.qty,0);
+  D.orders.push({
+    id:D.onid++,
+    table:gv('o-table')||'1',
+    guests:gv('o-guest')||'1',
+    items:[...curOrderItems],
+    total,status:'unpaid',
+    waiter:curUser.name,
+    time:now(),date:today()
+  });
+  sv();clearCurOrder();
+  alert("✅ Zakaz qabul qilindi!");
+  go('orders',null);
+  document.querySelectorAll('.ntab')[2].classList.add('active');
+  document.querySelectorAll('.ntab').forEach((t,i)=>{if(i!==2)t.classList.remove('active');});
+}
+
+// ══════════════════════════════════════
+// ORDERS LIST
+// ══════════════════════════════════════
+function filterOrders(f,t){
+  ordFilter=f;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  if(t)t.classList.add('active');
+  rOrders(f);
+}
+
+function rOrders(filter){
+  let list=D.orders.slice().reverse();
+  if(filter==='paid')list=list.filter(o=>o.status==='paid');
+  else if(filter==='unpaid')list=list.filter(o=>o.status==='unpaid');
+  const box=el('orders-list');
+  if(!list.length){box.innerHTML='<div class="empty">Zakaz yo\'q</div>';return;}
+  box.innerHTML=list.map(o=>`
+    <div class="ocard ${o.status}">
+      <div class="ocard-head">
+        <div class="ocard-info">
+          <div class="otitle">🪑 Stol ${o.table} · ${o.guests} kishi</div>
+          <div class="osub">${o.waiter} · ${o.time}</div>
+        </div>
+        <span class="ostatus ${o.status==='paid'?'st-paid':'st-unpaid'}">
+          ${o.status==='paid'?'✅ To\'landi':'⏳ Kutilmoqda'}
+        </span>
+      </div>
+      <div class="ocard-items">${o.items.map(i=>`${i.em||''}${i.name} ×${i.qty}`).join(' · ')}</div>
+      <div class="ocard-foot">
+        <span class="ototal">${f(o.total)}</span>
+        ${o.status==='unpaid'?`<button class="btn btn-green btn-sm" onclick="openPayModal(${o.id})" style="width:auto">💳 To'landi</button>`:''}
+        ${curUser&&curUser.role==='admin'&&o.status==='paid'?`<button class="btn btn-outline btn-sm" onclick="unpayOrder(${o.id})" style="width:auto;font-size:11px">↩ Qaytarish</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function openPayModal(id){
+  const o=D.orders.find(x=>x.id===id);if(!o)return;
+  payOrderId=id;
+  el('pay-detail').innerHTML=`
+    <div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:4px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="color:var(--mut);font-size:13px">Stol</span><span>${o.table}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="color:var(--mut);font-size:13px">Taomlar</span>
+        <span style="font-size:13px;text-align:right;max-width:180px">${o.items.map(i=>i.name+' ×'+i.qty).join(', ')}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid var(--bdr)">
+        <span style="font-size:15px;font-weight:600">Jami</span>
+        <span style="font-family:'DM Mono';font-size:18px;color:var(--gl);font-weight:700">${f(o.total)}</span>
+      </div>
+    </div>`;
+  el('pay-modal').classList.add('open');
+}
+function closePayModal(){el('pay-modal').classList.remove('open');payOrderId=null;}
+function confirmPay(){
+  if(!payOrderId)return;
+  const o=D.orders.find(x=>x.id===payOrderId);
+  if(o)o.status='paid';
+  sv();closePayModal();rOrders(ordFilter);rDash();
+}
+function unpayOrder(id){
+  if(!curUser||curUser.role!=='admin')return;
+  const o=D.orders.find(x=>x.id===id);
+  if(o)o.status='unpaid';
+  sv();rOrders(ordFilter);rDash();
+}
+
+// ══════════════════════════════════════
+// MENU
+// ══════════════════════════════════════
+function addMenuItem(){
+  if(!curUser||curUser.role!=='admin'){alert("Ruxsat yo'q!");return;}
+  const n=gv('m-name'),c=gv('m-cat'),p=gn('m-price'),em=gv('m-emoji')||'🍽';
+  if(!n||!p){alert("Nom va narxni kiriting!");return;}
+  D.menu.push({id:D.nid++,name:n,cat:c,price:p,em});
+  sv();el('m-name').value='';el('m-price').value='';el('m-emoji').value='';
+  rMenuList();rMenuBtns();
+}
+function delMenuItem(id){
+  if(!curUser||curUser.role!=='admin')return;
+  if(!confirm("O'chirilsinmi?"))return;
+  D.menu=D.menu.filter(m=>m.id!==id);sv();rMenuList();rMenuBtns();
+}
+function rMenuList(){
+  const box=el('menu-list');
+  if(!D.menu.length){box.innerHTML='<div class="empty">Taom yo\'q</div>';return;}
+  box.innerHTML=D.menu.map(m=>`
+    <div class="li">
+      <div class="lin">
+        <div class="ln">${m.em} ${m.name}</div>
+        <div class="ls">${m.cat}</div>
+      </div>
+      <div class="lir">
+        <span class="la agold">${f(m.price)}</span>
+        ${curUser&&curUser.role==='admin'?`<button class="btn btn-red btn-sm" onclick="delMenuItem(${m.id})">✕</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════
+// SETTINGS / USERS
+// ══════════════════════════════════════
+function addUser(){
+  const l=gv('u-login'),p=gv('u-pass'),r=gv('u-role'),n=gv('u-name');
+  if(!l||!p||!n){alert("Barcha maydonlarni to'ldiring!");return;}
+  if(D.users.find(u=>u.login===l)){alert("Bu login band!");return;}
+  D.users.push({login:l,pass:p,role:r,name:n});
+  sv();el('u-login').value='';el('u-pass').value='';el('u-name').value='';
+  rSettings();
+}
+function delUser(login){
+  if(login==='admin'){alert("Adminni o'chirib bo'lmaydi!");return;}
+  if(!confirm("O'chirilsinmi?"))return;
+  D.users=D.users.filter(u=>u.login!==login);sv();rSettings();
+}
+function rSettings(){
+  el('users-list').innerHTML=D.users.map(u=>`
+    <div class="li">
+      <div class="lin">
+        <div class="ln">${u.role==='admin'?'👑':'🧑‍🍳'} ${u.name}</div>
+        <div class="ls">@${u.login} · ${u.role==='admin'?'Admin':'Ofitsiant'}</div>
+      </div>
+      <div class="lir">
+        ${u.login!=='admin'?`<button class="btn btn-red btn-sm" onclick="delUser('${u.login}')">✕</button>`:'<span style="font-size:11px;color:var(--mut)">Himoyalangan</span>'}
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+el('tday').textContent=new Date().toLocaleDateString('uz-UZ',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+</script>
+</body>
+</html>
